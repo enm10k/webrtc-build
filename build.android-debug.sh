@@ -25,7 +25,7 @@ IMAGE_NAME=webrtc/$PACKAGE_NAME:m${WEBRTC_VERSION}
 DOCKER_BUILDKIT=1 docker build \
   -t $IMAGE_NAME \
   --build-arg WEBRTC_COMMIT=$WEBRTC_COMMIT \
-  IS_DEBUG=true \
+  --build-arg IS_DEBUG=true \
   -f android/Dockerfile \
   .
 
