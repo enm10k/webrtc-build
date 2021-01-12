@@ -43,6 +43,7 @@ jobs:
         name:
           - macos
           - ios
+          - ios-debug
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v2
@@ -65,6 +66,7 @@ jobs:
           - ubuntu-20.04_x86_64
           - centos-8_x86_64
           - android
+          - android-debug
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
@@ -117,6 +119,7 @@ jobs:
         name:
           - macos
           - ios
+          - ios-debug
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
@@ -125,6 +128,7 @@ jobs:
           - ubuntu-20.04_x86_64
           - centos-8_x86_64
           - android
+          - android-debug
     name: Release ${{ matrix.name }}
     if: contains(github.ref, 'tags/m')
     needs:
