@@ -41,25 +41,25 @@ RUN cd /root/_source/android/webrtc/src \
       --build-dir $BUILD_DIR/webrtc_android \
       --output $BUILD_DIR//webrtc_android/libwebrtc.aar \
       --arch armeabi-v7a arm64-v8a \
-      --extra-gn-args ' \
+      --extra-gn-args " \
         is_java_debug=$IS_DEBUG \
         rtc_include_tests=false \
         rtc_use_h264=false \
         is_component_build=false \
         use_rtti=true \
-      '
+      "
 
 # armeabi-v7a 用の libwebrtc.a
 RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_armeabi-v7a --args=' \
-    target_os="android" \
-    target_cpu="arm" \
+  && gn gen $BUILD_DIR/webrtc_armeabi-v7a --args=" \
+    target_os=\"android\" \
+    target_cpu=\"arm\" \
     is_debug=$IS_DEBUG \
     rtc_use_h264=false \
     rtc_include_tests=false \
     rtc_build_json=true \
     use_rtti=true \
-  ' \
+  " \
   && ninja -C $BUILD_DIR/webrtc_armeabi-v7a \
   && ninja -C $BUILD_DIR/webrtc_armeabi-v7a native_api
 
@@ -68,15 +68,15 @@ RUN cd $BUILD_DIR/webrtc_armeabi-v7a/obj \
 
 # arm64-v8a 用の libwebrtc.a
 RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_arm64-v8a --args=' \
-    target_os="android" \
-    target_cpu="arm64" \
-    is_debug=false \
+  && gn gen $BUILD_DIR/webrtc_arm64-v8a --args=" \
+    target_os=\"android\" \
+    target_cpu=\"arm64\" \
+    is_debug=$IS_DEBUG \
     rtc_use_h264=false \
     rtc_include_tests=false \
     rtc_build_json=true \
     use_rtti=true \
-  ' \
+  " \
   && ninja -C $BUILD_DIR/webrtc_arm64-v8a \
   && ninja -C $BUILD_DIR/webrtc_arm64-v8a native_api
 
@@ -94,13 +94,13 @@ RUN cd /root/_source/android/webrtc/src \
       --build-dir $BUILD_DIR/webrtc_android \
       --output $BUILD_DIR//webrtc_android/libwebrtc_onremovetrack.aar \
       --arch armeabi-v7a arm64-v8a \
-      --extra-gn-args ' \
-        is_java_debug=false \
+      --extra-gn-args " \
+        is_java_debug=$IS_DEBUG \
         rtc_include_tests=false \
         rtc_use_h264=false \
         is_component_build=false \
         use_rtti=true \
-      '
+      "
 
 ENV STATIC_DIR "/root/static"
 
