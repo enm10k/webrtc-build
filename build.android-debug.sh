@@ -16,7 +16,7 @@ set -ex
 _name=WebrtcBuildVersion
 _branch="M`echo $WEBRTC_VERSION | cut -d'.' -f1`"
 _commit="`echo $WEBRTC_VERSION | cut -d'.' -f3`"
-_revisionWEBRTC_COMMIT
+_revision=$WEBRTC_COMMIT
 _maint="`echo $WEBRTC_BUILD_VERSION | cut -d'.' -f4`"
 ./scripts/generate_version_android.sh "$_name" "$_branch" "$_commit" "$_revision" "$_maint" > android/$_name.java
 cat android/$_name.java
