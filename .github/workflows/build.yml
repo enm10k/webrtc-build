@@ -88,7 +88,7 @@ jobs:
         path: _package/${{ matrix.name }}/webrtc.tar.gz
   create-release:
     name: Create Release
-    if: contains(github.ref, 'tags/m')
+    # if: contains(github.ref, 'tags/m')
     needs:
       # - build-windows
       - build-macos
@@ -132,7 +132,7 @@ jobs:
           - android
           - android-debug
     name: Release ${{ matrix.name }}
-    if: contains(github.ref, 'tags/m')
+    # if: contains(github.ref, 'tags/m')
     needs:
       - create-release
     runs-on: ubuntu-latest
