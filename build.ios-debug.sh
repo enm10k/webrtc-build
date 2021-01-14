@@ -33,13 +33,14 @@ pushd $SOURCE_DIR/webrtc/src
 popd
 
 pushd $SOURCE_DIR/webrtc/src
-  ./tools_webrtc/ios/build_ios_libs.sh -o $BUILD_DIR/webrtc --build_config release --arch $TARGET_ARCHS --bitcode --extra-gn-args " \
+  ./tools_webrtc/ios/build_ios_libs.sh -o $BUILD_DIR/webrtc --build_config debug --arch $TARGET_ARCHS --bitcode --extra-gn-args " \
     rtc_libvpx_build_vp9=true \
     rtc_include_tests=false \
     rtc_build_examples=false \
     rtc_use_h264=false \
     use_rtti=true \
     libcxx_abi_unstable=false \
+    enable_dsyms=true \
   "
   _branch="M`echo $WEBRTC_VERSION | cut -d'.' -f1`"
   _commit="`echo $WEBRTC_VERSION | cut -d'.' -f3`"
@@ -101,4 +102,4 @@ pushd $SOURCE_DIR/webrtc/src
   python tools_webrtc/libs/generate_licenses.py --target //sdk:framework_objc $BUILD_DIR/webrtc/ $_dirs
 popd
 
-./scripts/package_webrtc_ios.sh $SCRIPT_DIR/static $SOURCE_DIR $BUILD_DIR $PACKAGE_DIR $SCRIPT_DIR/VERSION
+./scripts/package_webrtc_ios_debug.sh $SCRIPT_DIR/static $SOURCE_DIR $BUILD_DIR $PACKAGE_DIR $SCRIPT_DIR/VERSION
