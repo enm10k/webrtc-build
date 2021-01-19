@@ -35,10 +35,25 @@ RUN cd $SOURCE_DIR/webrtc/src \
   && patch -p2 < /root/patches/4k.patch \
   && patch -p1 < /root/patches/android_webrtc_version.patch
 
+# debug
 RUN cd /root/_source/android/webrtc/src \
   && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
-      --build-dir $BUILD_DIR/webrtc_android \
-      --output $BUILD_DIR//webrtc_android/libwebrtc.aar \
+      --build-dir $BUILD_DIR/webrtc_android/debug \
+      --output $BUILD_DIR/webrtc_android/debug/libwebrtc.aar \
+      --arch armeabi-v7a arm64-v8a \
+      --extra-gn-args ' \
+        is_java_debug=true \
+        rtc_include_tests=false \
+        rtc_use_h264=false \
+        is_component_build=false \
+        use_rtti=true \
+      '
+
+# release
+RUN cd /root/_source/android/webrtc/src \
+  && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
+      --build-dir $BUILD_DIR/webrtc_android/release \
+      --output $BUILD_DIR/webrtc_android/release/libwebrtc.aar \
       --arch armeabi-v7a arm64-v8a \
       --extra-gn-args ' \
         is_java_debug=false \
@@ -49,8 +64,26 @@ RUN cd /root/_source/android/webrtc/src \
       '
 
 # armeabi-v7a 用の libwebrtc.a
+# debug
 RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_armeabi-v7a --args=' \
+  && gn gen $BUILD_DIR/webrtc_armeabi-v7a/debug --args=' \
+    target_os="android" \
+    target_cpu="arm" \
+    is_debug=true \
+    rtc_use_h264=false \
+    rtc_include_tests=false \
+    rtc_build_json=true \
+    use_rtti=true \
+  ' \
+  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a/debug \
+  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a/debug native_api
+
+RUN cd $BUILD_DIR/webrtc_armeabi-v7a/debug/obj \
+  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_armeabi-v7a/debug/libwebrtc.a `find . -name '*.o'`
+
+# release
+RUN cd $SOURCE_DIR/webrtc/src \
+  && gn gen $BUILD_DIR/webrtc_armeabi-v7a/release --args=' \
     target_os="android" \
     target_cpu="arm" \
     is_debug=false \
@@ -59,15 +92,33 @@ RUN cd $SOURCE_DIR/webrtc/src \
     rtc_build_json=true \
     use_rtti=true \
   ' \
-  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a \
-  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a native_api
+  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a/release \
+  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a/release native_api
 
-RUN cd $BUILD_DIR/webrtc_armeabi-v7a/obj \
-  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_armeabi-v7a/libwebrtc.a `find . -name '*.o'`
+RUN cd $BUILD_DIR/webrtc_armeabi-v7a/release/obj \
+  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_armeabi-v7a/release/libwebrtc.a `find . -name '*.o'`
 
 # arm64-v8a 用の libwebrtc.a
+# debug
 RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_arm64-v8a --args=' \
+  && gn gen $BUILD_DIR/webrtc_arm64-v8a/debug --args=' \
+    target_os="android" \
+    target_cpu="arm64" \
+    is_debug=true \
+    rtc_use_h264=false \
+    rtc_include_tests=false \
+    rtc_build_json=true \
+    use_rtti=true \
+  ' \
+  && ninja -C $BUILD_DIR/webrtc_arm64-v8a/debug \
+  && ninja -C $BUILD_DIR/webrtc_arm64-v8a/debug native_api
+
+RUN cd $BUILD_DIR/webrtc_arm64-v8a/debug/obj \
+  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_arm64-v8a/debug/libwebrtc.a `find . -name '*.o'`
+
+# release
+RUN cd $SOURCE_DIR/webrtc/src \
+  && gn gen $BUILD_DIR/webrtc_arm64-v8a/release --args=' \
     target_os="android" \
     target_cpu="arm64" \
     is_debug=false \
@@ -76,11 +127,11 @@ RUN cd $SOURCE_DIR/webrtc/src \
     rtc_build_json=true \
     use_rtti=true \
   ' \
-  && ninja -C $BUILD_DIR/webrtc_arm64-v8a \
-  && ninja -C $BUILD_DIR/webrtc_arm64-v8a native_api
+  && ninja -C $BUILD_DIR/webrtc_arm64-v8a/release \
+  && ninja -C $BUILD_DIR/webrtc_arm64-v8a/release native_api
 
-RUN cd $BUILD_DIR/webrtc_arm64-v8a/obj \
-  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_arm64-v8a/libwebrtc.a `find . -name '*.o'`
+RUN cd $BUILD_DIR/webrtc_arm64-v8a/release/obj \
+  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_arm64-v8a/release/libwebrtc.a `find . -name '*.o'`
 
 # onremovetrack 入りの aar
 # ソースが書き換わるので最後にやる必要がある
@@ -88,10 +139,25 @@ COPY patches/android_onremovetrack.patch /root/patches/
 RUN cd $SOURCE_DIR/webrtc/src \
   && patch -p1 < /root/patches/android_onremovetrack.patch
 
+# debug
 RUN cd /root/_source/android/webrtc/src \
   && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
-      --build-dir $BUILD_DIR/webrtc_android \
-      --output $BUILD_DIR//webrtc_android/libwebrtc_onremovetrack.aar \
+      --build-dir $BUILD_DIR/webrtc_android/debug \
+      --output $BUILD_DIR/webrtc_android/debug/libwebrtc_onremovetrack.aar \
+      --arch armeabi-v7a arm64-v8a \
+      --extra-gn-args ' \
+        is_java_debug=true \
+        rtc_include_tests=false \
+        rtc_use_h264=false \
+        is_component_build=false \
+        use_rtti=true \
+      '
+
+# release
+RUN cd /root/_source/android/webrtc/src \
+  && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
+      --build-dir $BUILD_DIR/webrtc_android/release \
+      --output $BUILD_DIR/webrtc_android/release/libwebrtc_onremovetrack.aar \
       --arch armeabi-v7a arm64-v8a \
       --extra-gn-args ' \
         is_java_debug=false \

@@ -14,30 +14,52 @@ PACKAGE_DIR=$4
 VERSION_FILE=$5
 
 rm -rf $BUILD_DIR/package/webrtc
-mkdir -p $BUILD_DIR/package/webrtc/lib
-mkdir -p $BUILD_DIR/package/webrtc/aar
-mkdir -p $BUILD_DIR/package/webrtc/jar
+mkdir -p $BUILD_DIR/package/webrtc/debug/lib
+mkdir -p $BUILD_DIR/package/webrtc/release/lib
+mkdir -p $BUILD_DIR/package/webrtc/debug/aar
+mkdir -p $BUILD_DIR/package/webrtc/release/aar
+mkdir -p $BUILD_DIR/package/webrtc/debug/jar
+mkdir -p $BUILD_DIR/package/webrtc/release/jar
 mkdir -p $BUILD_DIR/package/webrtc/include
 
 # webrtc のヘッダ類
 rsync -amv '--include=*/' '--include=*.h' '--include=*.hpp' '--exclude=*' $SOURCE_DIR/webrtc/src/. $BUILD_DIR/package/webrtc/include/.
 
 # libwebrtc.aar, libwebrtc.a, NOTICE
-cp $BUILD_DIR/webrtc_android/libwebrtc.aar $BUILD_DIR/package/webrtc/aar/
-cp $BUILD_DIR/webrtc_android/libwebrtc_onremovetrack.aar $BUILD_DIR/package/webrtc/aar/
-mkdir -p $BUILD_DIR/package/webrtc/lib/armeabi-v7a/
-cp $BUILD_DIR/webrtc_armeabi-v7a/libwebrtc.a $BUILD_DIR/package/webrtc/lib/armeabi-v7a/
-mkdir -p $BUILD_DIR/package/webrtc/lib/arm64-v8a/
-cp $BUILD_DIR/webrtc_arm64-v8a/libwebrtc.a $BUILD_DIR/package/webrtc/lib/arm64-v8a/
-cp $BUILD_DIR/webrtc_android/LICENSE.md $BUILD_DIR/package/webrtc/NOTICE
+cp $BUILD_DIR/webrtc_android/debug/libwebrtc.aar $BUILD_DIR/package/webrtc/debug/aar/
+cp $BUILD_DIR/webrtc_android/release/libwebrtc.aar $BUILD_DIR/package/webrtc/release/aar/
+
+cp $BUILD_DIR/webrtc_android/debug/libwebrtc_onremovetrack.aar $BUILD_DIR/package/webrtc/debug/aar/
+cp $BUILD_DIR/webrtc_android/release/libwebrtc_onremovetrack.aar $BUILD_DIR/package/webrtc/release/aar/
+
+mkdir -p $BUILD_DIR/package/webrtc/debug/lib/armeabi-v7a
+mkdir -p $BUILD_DIR/package/webrtc/release/lib/armeabi-v7a
+cp $BUILD_DIR/webrtc_armeabi-v7a/debug/libwebrtc.a $BUILD_DIR/package/webrtc/debug/lib/armeabi-v7a/
+cp $BUILD_DIR/webrtc_armeabi-v7a/release/libwebrtc.a $BUILD_DIR/package/webrtc/release/lib/armeabi-v7a/
+
+mkdir -p $BUILD_DIR/package/webrtc/debug/lib/arm64-v8a
+mkdir -p $BUILD_DIR/package/webrtc/release/lib/arm64-v8a
+cp $BUILD_DIR/webrtc_arm64-v8a/debug/libwebrtc.a $BUILD_DIR/package/webrtc/debug/lib/arm64-v8a/
+cp $BUILD_DIR/webrtc_arm64-v8a/release/libwebrtc.a $BUILD_DIR/package/webrtc/release/lib/arm64-v8a/
+
+cp $BUILD_DIR/webrtc_android/release/LICENSE.md $BUILD_DIR/package/webrtc/NOTICE
 
 # libwebrtc.aar を unzip して classes.jar を配置する
-mkdir -p $BUILD_DIR/package/webrtc/jar/tmp
-pushd $BUILD_DIR/package/webrtc/jar/tmp
-  unzip $BUILD_DIR/package/webrtc/aar/libwebrtc.aar
+# debug
+mkdir -p $BUILD_DIR/package/webrtc/debug/jar/tmp
+pushd $BUILD_DIR/package/webrtc/debug/jar/tmp
+  unzip $BUILD_DIR/package/webrtc/debug/aar/libwebrtc.aar
   mv classes.jar ../webrtc.jar
 popd
-rm -r $BUILD_DIR/package/webrtc/jar/tmp
+rm -r $BUILD_DIR/package/webrtc/debug/jar/tmp
+
+# release
+mkdir -p $BUILD_DIR/package/webrtc/release/jar/tmp
+pushd $BUILD_DIR/package/webrtc/release/jar/tmp
+  unzip $BUILD_DIR/package/webrtc/release/aar/libwebrtc.aar
+  mv classes.jar ../webrtc.jar
+popd
+rm -r $BUILD_DIR/package/webrtc/release/jar/tmp
 
 # 各種情報を拾ってくる
 cp $VERSION_FILE $BUILD_DIR/package/webrtc/VERSIONS
