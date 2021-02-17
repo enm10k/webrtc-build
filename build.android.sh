@@ -33,4 +33,4 @@ rm android/WebrtcBuildVersion.java
 mkdir -p $PACKAGE_DIR
 CONTAINER_ID=`docker container create $IMAGE_NAME`
 docker container cp $CONTAINER_ID:/webrtc.tar.gz $PACKAGE_DIR/webrtc.tar.gz
-docker container rm $CONTAINER_ID
+# docker container rm $CONTAINER_ID

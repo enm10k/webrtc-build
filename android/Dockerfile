@@ -35,58 +35,65 @@ RUN cd $SOURCE_DIR/webrtc/src \
   && patch -p2 < /root/patches/4k.patch \
   && patch -p1 < /root/patches/android_webrtc_version.patch
 
-RUN cd /root/_source/android/webrtc/src \
-  && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
-      --build-dir $BUILD_DIR/webrtc_android \
-      --output $BUILD_DIR//webrtc_android/libwebrtc.aar \
-      --arch armeabi-v7a arm64-v8a \
-      --extra-gn-args ' \
-        is_java_debug=false \
-        rtc_include_tests=false \
-        rtc_use_h264=false \
-        is_component_build=false \
-        use_rtti=true \
-      '
-
-# armeabi-v7a 用の libwebrtc.a
-RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_armeabi-v7a --args=' \
-    target_os="android" \
-    target_cpu="arm" \
-    is_debug=false \
-    rtc_use_h264=false \
-    rtc_include_tests=false \
-    rtc_build_json=true \
-    use_rtti=true \
-  ' \
-  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a \
-  && ninja -C $BUILD_DIR/webrtc_armeabi-v7a native_api
-
-RUN cd $BUILD_DIR/webrtc_armeabi-v7a/obj \
-  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_armeabi-v7a/libwebrtc.a `find . -name '*.o'`
-
-# arm64-v8a 用の libwebrtc.a
-RUN cd $SOURCE_DIR/webrtc/src \
-  && gn gen $BUILD_DIR/webrtc_arm64-v8a --args=' \
-    target_os="android" \
-    target_cpu="arm64" \
-    is_debug=false \
-    rtc_use_h264=false \
-    rtc_include_tests=false \
-    rtc_build_json=true \
-    use_rtti=true \
-  ' \
-  && ninja -C $BUILD_DIR/webrtc_arm64-v8a \
-  && ninja -C $BUILD_DIR/webrtc_arm64-v8a native_api
-
-RUN cd $BUILD_DIR/webrtc_arm64-v8a/obj \
-  && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_arm64-v8a/libwebrtc.a `find . -name '*.o'`
+# RUN cd /root/_source/android/webrtc/src \
+#   && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
+#       --build-dir $BUILD_DIR/webrtc_android \
+#       --output $BUILD_DIR//webrtc_android/libwebrtc.aar \
+#       --arch armeabi-v7a arm64-v8a \
+#       --extra-gn-args ' \
+#         is_java_debug=false \
+#         rtc_include_tests=false \
+#         rtc_use_h264=false \
+#         is_component_build=false \
+#         use_rtti=true \
+#       '
+# 
+# # armeabi-v7a 用の libwebrtc.a
+# RUN cd $SOURCE_DIR/webrtc/src \
+#   && gn gen $BUILD_DIR/webrtc_armeabi-v7a --args=' \
+#     target_os="android" \
+#     target_cpu="arm" \
+#     is_debug=false \
+#     rtc_use_h264=false \
+#     rtc_include_tests=false \
+#     rtc_build_json=true \
+#     use_rtti=true \
+#   ' \
+#   && ninja -C $BUILD_DIR/webrtc_armeabi-v7a \
+#   && ninja -C $BUILD_DIR/webrtc_armeabi-v7a native_api
+# 
+# RUN cd $BUILD_DIR/webrtc_armeabi-v7a/obj \
+#   && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_armeabi-v7a/libwebrtc.a `find . -name '*.o'`
+# 
+# # arm64-v8a 用の libwebrtc.a
+# RUN cd $SOURCE_DIR/webrtc/src \
+#   && gn gen $BUILD_DIR/webrtc_arm64-v8a --args=' \
+#     target_os="android" \
+#     target_cpu="arm64" \
+#     is_debug=false \
+#     rtc_use_h264=false \
+#     rtc_include_tests=false \
+#     rtc_build_json=true \
+#     use_rtti=true \
+#   ' \
+#   && ninja -C $BUILD_DIR/webrtc_arm64-v8a \
+#   && ninja -C $BUILD_DIR/webrtc_arm64-v8a native_api
+# 
+# RUN cd $BUILD_DIR/webrtc_arm64-v8a/obj \
+#   && $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $BUILD_DIR/webrtc_arm64-v8a/libwebrtc.a `find . -name '*.o'`
 
 # onremovetrack 入りの aar
 # ソースが書き換わるので最後にやる必要がある
 COPY patches/android_onremovetrack.patch /root/patches/
 RUN cd $SOURCE_DIR/webrtc/src \
   && patch -p1 < /root/patches/android_onremovetrack.patch
+
+# TODO: 後で COPY に修正する
+COPY patches/android-simulcast /root/patches/android-simulcast/
+RUN cp /root/patches/android-simulcast/BUILD.gn $SOURCE_DIR/webrtc/src/sdk/android && \
+  cp /root/patches/android-simulcast/SimulcastVideoEncoder*.java $SOURCE_DIR/webrtc/src/sdk/android/api/org/webrtc/ && \
+  cp /root/patches/android-simulcast/simulcast_video_encoder.h $SOURCE_DIR/webrtc/src/sdk/android/src/jni && \
+  cp /root/patches/android-simulcast/simulcast_video_encoder.cc $SOURCE_DIR/webrtc/src/sdk/android/src/jni
 
 RUN cd /root/_source/android/webrtc/src \
   && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
@@ -109,6 +116,6 @@ RUN /root/scripts/package_webrtc_android.sh $STATIC_DIR $SOURCE_DIR $BUILD_DIR $
 
 RUN mv $PACKAGE_DIR/webrtc.tar.gz /
 
-FROM ubuntu:18.04
+# FROM ubuntu:18.04
 
-COPY --from=builder /webrtc.tar.gz /
+# COPY --from=builder /webrtc.tar.gz /
