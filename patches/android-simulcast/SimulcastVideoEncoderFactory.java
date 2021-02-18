@@ -27,11 +27,13 @@ public class SimulcastVideoEncoderFactory implements VideoEncoderFactory {
 
     @Nullable
     @Override
+    @CalledByNative
     public VideoEncoder createEncoder(VideoCodecInfo info) {
         return new SimulcastVideoEncoder(primary, fallback, info);
     }
 
     @Override
+    @CalledByNative
     public VideoCodecInfo[] getSupportedCodecs() {
         return supportedCodecs();
     }
@@ -39,7 +41,7 @@ public class SimulcastVideoEncoderFactory implements VideoEncoderFactory {
     static VideoCodecInfo[] supportedCodecs() {
         List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
         codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
-	// TODO: H.264
+        codecs.add(new VideoCodecInfo("H264", new HashMap<>()));
         return codecs.toArray(new VideoCodecInfo[codecs.size()]);
     }
 

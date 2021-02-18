@@ -110,6 +110,8 @@ RUN cd /root/_source/android/webrtc/src \
         use_rtti=true \
         dcheck_always_on=true \
         symbol_level=2 \
+        android_full_debug=true \
+        enable_full_stack_frames_for_profiling=true \
       '
 
 ENV STATIC_DIR "/root/static"

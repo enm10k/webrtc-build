@@ -4,6 +4,7 @@
 #include "sdk/android/src/jni/video_encoder_factory_wrapper.h"
 #include "sdk/android/src/jni/video_codec_info.h"
 #include "media/engine/simulcast_encoder_adapter.h"
+#include "rtc_base/logging.h"
 
 using namespace webrtc;
 using namespace webrtc::jni;
@@ -14,6 +15,7 @@ extern "C" {
 
 // (VideoEncoderFactory primary, VideoEncoderFactory fallback, VideoCodecInfo info)
 JNIEXPORT jlong JNICALL Java_org_webrtc_SimulcastVideoEncoder_nativeCreateEncoder(JNIEnv *env, jclass klass, jobject primary, jobject fallback, jobject info) {
+    RTC_LOG(LS_INFO) << "ENOMOTO: hello world!";
     JavaParamRef<jobject> primary_ref(primary);
     JavaParamRef<jobject> fallback_ref(fallback);
     JavaParamRef<jobject> info_ref(info);
