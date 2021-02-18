@@ -95,17 +95,21 @@ RUN cp /root/patches/android-simulcast/BUILD.gn $SOURCE_DIR/webrtc/src/sdk/andro
   cp /root/patches/android-simulcast/simulcast_video_encoder.h $SOURCE_DIR/webrtc/src/sdk/android/src/jni && \
   cp /root/patches/android-simulcast/simulcast_video_encoder.cc $SOURCE_DIR/webrtc/src/sdk/android/src/jni
 
+# 参考: https://www.chromium.org/developers/gn-build-configuration
 RUN cd /root/_source/android/webrtc/src \
   && python $SOURCE_DIR/webrtc/src/tools_webrtc/android/build_aar.py \
       --build-dir $BUILD_DIR/webrtc_android \
       --output $BUILD_DIR//webrtc_android/libwebrtc_onremovetrack.aar \
       --arch armeabi-v7a arm64-v8a \
       --extra-gn-args ' \
-        is_java_debug=false \
+        is_debug=true \
+        is_java_debug=true \
         rtc_include_tests=false \
         rtc_use_h264=false \
         is_component_build=false \
         use_rtti=true \
+        dcheck_always_on=true \
+        symbol_level=2 \
       '
 
 ENV STATIC_DIR "/root/static"
