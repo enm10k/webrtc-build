@@ -218,6 +218,8 @@ PATCHES = {
         "h265.patch",
         "h265_ios.patch",
         "arm_neon_sve_bridge.patch",
+        "bframe.patch",
+        "bframe_ios.patch",
     ],
     "ios": [
         "add_deps.patch",
@@ -232,6 +234,8 @@ PATCHES = {
         "h265.patch",
         "h265_ios.patch",
         "arm_neon_sve_bridge.patch",
+        "bframe.patch",
+        "bframe_ios.patch",
     ],
     "android": [
         "add_deps.patch",
@@ -245,6 +249,8 @@ PATCHES = {
         "android_proxy.patch",
         "h265.patch",
         "h265_android.patch",
+        "bframe.patch",
+        "bframe_android.patch",
     ],
     "raspberry-pi-os_armv6": [
         "nacl_armv6_2.patch",
