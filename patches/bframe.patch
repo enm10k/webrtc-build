@@ -857,23 +857,6 @@ index 6098f59..a5c52e6 100644
        // TODO(bugs.webrtc.org/13485)
        break;
      default:
-diff --git a/rtc_base/boringssl_certificate.cc b/rtc_base/boringssl_certificate.cc
-index ba9ff4a..f902d8f 100644
---- a/rtc_base/boringssl_certificate.cc
-+++ b/rtc_base/boringssl_certificate.cc
-@@ -261,12 +261,6 @@ BoringSSLCertificate::BoringSSLCertificate(
-   RTC_DCHECK(cert_buffer_ != nullptr);
- }
- 
--BoringSSLCertificate::BoringSSLCertificate(
--    bssl::UniquePtr<CRYPTO_BUFFER> cert_buffer, SSL* ssl)
--    : cert_buffer_(std::move(cert_buffer)), ssl_(ssl) {
--  RTC_DCHECK(cert_buffer_ != nullptr);
--}
--
- std::unique_ptr<BoringSSLCertificate> BoringSSLCertificate::Generate(
-     OpenSSLKeyPair* key_pair,
-     const SSLIdentityParams& params) {
 diff --git a/video/config/video_encoder_config.cc b/video/config/video_encoder_config.cc
 index 44f2dac..b98e7f0 100644
 --- a/video/config/video_encoder_config.cc
