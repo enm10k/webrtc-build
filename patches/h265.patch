@@ -153,22 +153,23 @@ index 625869d8d5..ea127ed396 100644
    // Parse the PPS state, for a bit buffer where RBSP decoding has already been
    // performed.
 diff --git i/modules/rtp_rtcp/BUILD.gn w/modules/rtp_rtcp/BUILD.gn
-index 2c42e53d36..30a5dd0d9d 100644
+index b471c2fa76..27b2f7bb0a 100644
 --- i/modules/rtp_rtcp/BUILD.gn
 +++ w/modules/rtp_rtcp/BUILD.gn
-@@ -261,8 +261,10 @@ rtc_library("rtp_rtcp") {
+@@ -260,8 +260,10 @@ rtc_library("rtp_rtcp") {
+ 
    if (rtc_use_h265) {
      sources += [
-       "source/rtp_packet_h265_common.h",
 -      "source/rtp_packetizer_h265.cc",
 -      "source/rtp_packetizer_h265.h",
 +      # "source/rtp_packetizer_h265.cc",
 +      # "source/rtp_packetizer_h265.h",
 +      "source/rtp_format_h265.cc",
 +      "source/rtp_format_h265.h",
-       "source/video_rtp_depacketizer_h265.cc",
-       "source/video_rtp_depacketizer_h265.h",
      ]
+   }
+ 
+
 diff --git a/modules/rtp_rtcp/source/rtp_format.cc b/modules/rtp_rtcp/source/rtp_format.cc
 index c7534dee40..937a14c022 100644
 --- a/modules/rtp_rtcp/source/rtp_format.cc
@@ -1410,7 +1411,7 @@ index badb942cd4..d032643287 100644
 +        rtcp_feedback_buffer_.SendBufferedRtcpFeedback();
 +        ABSL_FALLTHROUGH_INTENDED;
 +      case video_coding::H265VpsSpsPpsTracker::kDrop:
-+        return false;
++        return;
 +      case video_coding::H265VpsSpsPpsTracker::kInsert:
 +        packet->video_payload = std::move(fixed.bitstream);
 +        break;
