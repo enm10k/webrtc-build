@@ -220,6 +220,7 @@ PATCHES = {
         "arm_neon_sve_bridge.patch",
         "bframe.patch",
         "bframe_ios.patch",
+        "bframe_ios_experiment.patch",
     ],
     "ios": [
         "add_deps.patch",
@@ -236,6 +237,7 @@ PATCHES = {
         "arm_neon_sve_bridge.patch",
         "bframe.patch",
         "bframe_ios.patch",
+        "bframe_ios_experiment.patch",
     ],
     "android": [
         "add_deps.patch",
