@@ -220,7 +220,7 @@ PATCHES = {
         "arm_neon_sve_bridge.patch",
         "bframe.patch",
         "bframe_ios.patch",
-        "bframe_ios_encoder_setting.patch",
+        "bframe_fix.patch",
     ],
     "ios": [
         "add_deps.patch",
@@ -237,7 +237,7 @@ PATCHES = {
         "arm_neon_sve_bridge.patch",
         "bframe.patch",
         "bframe_ios.patch",
-        "bframe_ios_encoder_setting.patch",
+        "bframe_fix.patch",
     ],
     "android": [
         "add_deps.patch",
@@ -1054,11 +1054,13 @@ def package_webrtc(
         # 当初は generate_licenses.py に `--target 'buildtools/third_party/libc++'` を指定する方法も検討したが、
         # iOS/macOS のビルドでは libc++ が gn のターゲットに含まれていないため、エラーになった
         with open(os.path.join(webrtc_package_dir, "NOTICE"), "a") as f:
-            f.write(f"""# arm_neon_sve_bridge.h
+            f.write(
+                f"""# arm_neon_sve_bridge.h
 ```
 {ARM_NEON_SVE_BRIDGE_LICENSE}
 ```
-""")
+"""
+            )
 
     # ヘッダーファイルをコピー
     copy_headers(webrtc_src_dir, webrtc_package_dir, target)

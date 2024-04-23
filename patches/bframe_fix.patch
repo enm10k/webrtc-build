@@ -1,0 +1,165 @@
+diff --git i/media/engine/webrtc_video_engine.cc w/media/engine/webrtc_video_engine.cc
+index 587d9b4538..86727e4d12 100644
+--- i/media/engine/webrtc_video_engine.cc
++++ w/media/engine/webrtc_video_engine.cc
+@@ -851,11 +851,18 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
+   }
+ 
+ #ifdef RTC_ENABLE_BFRAME
+-  if (IsBframeSupportedSendCodecAvailable() &&
+-    IsBframeSupportedRecvCodecAvailable())
++  bool isBframeSupportedSendCodecAvailable = IsBframeSupportedSendCodecAvailable();
++  bool isBframeSupportedRecvCodecAvailable = IsBframeSupportedRecvCodecAvailable();
++  if (isBframeSupportedSendCodecAvailable && isBframeSupportedRecvCodecAvailable)
+   {
+     result.emplace_back(webrtc::RtpExtension::kCompositionTimeUri, id++,
+                         webrtc::RtpTransceiverDirection::kSendRecv);
++  } else if (isBframeSupportedSendCodecAvailable) {
++    result.emplace_back(webrtc::RtpExtension::kCompositionTimeUri, id++,
++                        webrtc::RtpTransceiverDirection::kSendOnly);
++  } else if (isBframeSupportedRecvCodecAvailable) {
++    result.emplace_back(webrtc::RtpExtension::kCompositionTimeUri, id++,
++                        webrtc::RtpTransceiverDirection::kRecvOnly);
+   }
+ #endif
+ 
+diff --git i/sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.mm w/sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.mm
+index 57d5847d59..eb62fb2853 100644
+--- i/sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.mm
++++ w/sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.mm
+@@ -49,7 +49,11 @@ - (instancetype)initWithNativeSdpVideoFormat : (webrtc::SdpVideoFormat)format {
+     scalabilityModes.push_back(static_cast<webrtc::ScalabilityMode>(value));
+   }
+ 
+-  return webrtc::SdpVideoFormat([NSString stdStringForString:self.name], parameters, scalabilityModes);
++  auto sdp_format = webrtc::SdpVideoFormat([NSString stdStringForString:self.name], parameters, scalabilityModes);
++#ifdef RTC_ENABLE_BFRAME
++  sdp_format.bframe_enabled = self.bframeEnabled;
++#endif // RTC_ENABLE_BFRAME
++  return sdp_format;
+ }
+ 
+ @end
+diff --git i/sdk/objc/api/peerconnection/RTCVideoEncoderSettings+Private.mm w/sdk/objc/api/peerconnection/RTCVideoEncoderSettings+Private.mm
+index dec3a61090..6369b42831 100644
+--- i/sdk/objc/api/peerconnection/RTCVideoEncoderSettings+Private.mm
++++ w/sdk/objc/api/peerconnection/RTCVideoEncoderSettings+Private.mm
+@@ -29,6 +29,14 @@ - (instancetype)initWithNativeVideoCodec : (const webrtc::VideoCodec *)videoCode
+       self.maxFramerate = videoCodec->maxFramerate;
+       self.qpMax = videoCodec->qpMax;
+       self.mode = (RTCVideoCodecMode)videoCodec->mode;
++
++//START:RTC_ENABLE_BFRAME
++      if (videoCodec->codecType == webrtc::kVideoCodecH264) {
++        self.bframeEnabled = videoCodec->H264().bframe_enabled;
++      } else if (videoCodec->codecType == webrtc::kVideoCodecH265) {
++        self.bframeEnabled = videoCodec->H265().bframe_enabled;
++      }
++//END:RTC_ENABLE_BFRAME
+     }
+   }
+ 
+diff --git i/sdk/objc/base/RTCVideoEncoderSettings.h w/sdk/objc/base/RTCVideoEncoderSettings.h
+index 6c9d381a2c..4956b2b4aa 100644
+--- i/sdk/objc/base/RTCVideoEncoderSettings.h
++++ w/sdk/objc/base/RTCVideoEncoderSettings.h
+@@ -37,7 +37,9 @@ RTC_OBJC_EXPORT
+ @property(nonatomic, assign) unsigned int qpMax;
+ @property(nonatomic, assign) RTCVideoCodecMode mode;
+ 
+-@property(nonatomic, readonly) BOOL bframeEnabled;
++//START:RTC_ENABLE_BFRAME
++@property(nonatomic, assign) BOOL bframeEnabled;
++//END:RTC_ENABLE_BFRAME
+ 
+ @end
+ 
+diff --git i/sdk/objc/base/RTCVideoEncoderSettings.m w/sdk/objc/base/RTCVideoEncoderSettings.m
+index f66cd2cf77..ac71a997ec 100644
+--- i/sdk/objc/base/RTCVideoEncoderSettings.m
++++ w/sdk/objc/base/RTCVideoEncoderSettings.m
+@@ -22,4 +22,8 @@ @implementation RTC_OBJC_TYPE (RTCVideoEncoderSettings)
+ @synthesize qpMax = _qpMax;
+ @synthesize mode = _mode;
+ 
++//START:RTC_ENABLE_BFRAME
++@synthesize bframeEnabled = _bframeEnabled;
++//END:RTC_ENABLE_BFRAME
++
+ @end
+diff --git i/sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m w/sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m
+index b45478db85..1b226c6ed9 100644
+--- i/sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m
++++ w/sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m
+@@ -33,15 +33,35 @@ @implementation RTC_OBJC_TYPE (RTCDefaultVideoDecoderFactory)
+     @"level-asymmetry-allowed" : @"1",
+     @"packetization-mode" : @"1",
+   };
++#ifdef RTC_ENABLE_BFRAME
++  RTC_OBJC_TYPE(RTCVideoCodecInfo) *constrainedHighInfo =
++      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH264Name
++                                                  parameters:constrainedHighParams
++                                                  enableBframe:true];
++#else // RTC_ENABLE_BFRAME
+   RTC_OBJC_TYPE(RTCVideoCodecInfo) *constrainedHighInfo =
+       [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH264Name
+                                                   parameters:constrainedHighParams];
++#endif // RTC_ENABLE_BFRAME
+ 
+   NSDictionary<NSString *, NSString *> *constrainedBaselineParams = @{
+     @"profile-level-id" : kRTCMaxSupportedH264ProfileLevelConstrainedBaseline,
+     @"level-asymmetry-allowed" : @"1",
+     @"packetization-mode" : @"1",
+   };
++
++#ifdef RTC_ENABLE_BFRAME
++  RTC_OBJC_TYPE(RTCVideoCodecInfo) *constrainedBaselineInfo =
++      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH264Name
++                                                  parameters:constrainedBaselineParams
++                                                  enableBframe:true];
++
++#if defined(RTC_ENABLE_H265)
++  RTC_OBJC_TYPE(RTCVideoCodecInfo) *h265Info =
++      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH265Name
++                                                  enableBframe:true];
++#endif // RTC_ENABLE_H265
++#else // RTC_ENABLE_BFRAME
+   RTC_OBJC_TYPE(RTCVideoCodecInfo) *constrainedBaselineInfo =
+       [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH264Name
+                                                   parameters:constrainedBaselineParams];
+@@ -49,7 +69,8 @@ @implementation RTC_OBJC_TYPE (RTCDefaultVideoDecoderFactory)
+ #if defined(RTC_ENABLE_H265)
+   RTC_OBJC_TYPE(RTCVideoCodecInfo) *h265Info =
+       [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecH265Name];
+-#endif
++#endif // RTC_ENABLE_H265
++#endif // RTC_ENABLE_BFRAME
+ 
+   RTC_OBJC_TYPE(RTCVideoCodecInfo) *vp8Info =
+       [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecVp8Name];
+diff --git i/sdk/objc/components/video_codec/RTCVideoEncoderH264.h w/sdk/objc/components/video_codec/RTCVideoEncoderH264.h
+index f974d38184..2ffa08638b 100644
+--- i/sdk/objc/components/video_codec/RTCVideoEncoderH264.h
++++ w/sdk/objc/components/video_codec/RTCVideoEncoderH264.h
+@@ -23,8 +23,4 @@ RTC_OBJC_EXPORT
+ + (BOOL)isBframeSupported;
+ #endif // RTC_ENABLE_BFRAME
+ 
+-//START:RTC_ENABLE_BFRAME
+-@property (nonatomic, assign) BOOL bframeEnabled;
+-//END:RTC_ENABLE_BFRAME
+-
+ @end
+diff --git i/sdk/objc/components/video_codec/RTCVideoEncoderH265.h w/sdk/objc/components/video_codec/RTCVideoEncoderH265.h
+index 3410b2f9ce..6139d8bf21 100644
+--- i/sdk/objc/components/video_codec/RTCVideoEncoderH265.h
++++ w/sdk/objc/components/video_codec/RTCVideoEncoderH265.h
+@@ -26,8 +26,4 @@ RTC_OBJC_EXPORT
+ + (BOOL)isBframeSupported;
+ #endif // RTC_ENABLE_BFRAME
+ 
+-//START:RTC_ENABLE_BFRAME
+-@property (nonatomic, assign) BOOL bframeEnabled;
+-//END:RTC_ENABLE_BFRAME
+-
+ @end
